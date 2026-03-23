@@ -10,14 +10,16 @@ vocab = pd.read_csv(file_url)
 
 pygame.init()
 
+# Initialize variables
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
+clock = pygame.time.Clock()
 
 score_info = pd.DataFrame({
     'Points': [],
     'Correct': [],
     'Incorrect': [],
-})
+}) # Weight by mode of incorrect cards for displaying an incorrect answer randomly
 
 # create meteor class
 
@@ -28,6 +30,9 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+    
+    screen.fill9((255, 255, 255))
+    pygame.display.update()
 
 pygame.quit()
 
