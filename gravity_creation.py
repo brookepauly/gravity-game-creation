@@ -19,18 +19,21 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 clock = pygame.time.Clock()
 
+# user selects front, back, or random side of cards to be shown on asteroid
+
+
 font = pygame.font.Font(None, size = 30)
 
 astroid_img = pygame.image.load("astroid.png").convert_alpha
-background_img = pygame.image.load("background.png")
-
 astroid_img = pygame.transform.scale(astroid_img, astroid_img.get_width * 2, astroid_img.get_height * 2)
 
-score_info = pd.DataFrame({
-    'Points': [],
-    'Correct': [],
-    'Incorrect': [],
-}) # Weight by mode of incorrect cards for displaying an incorrect answer 
+class Score:
+    def __init__(self):
+        self.points    = 0
+        self.correct   = 0
+        self.incorrect = 0
+
+score = Score()
 
 # create meteor class
 
@@ -40,12 +43,38 @@ run = True
 y = 0
 delta_time = .1
 
+# create menu options
+mode = None
+buttons = [
+    {"label": "Front",  "rect": pygame.Rect(400, 250, 200, 50)},
+    {"label": "Back",   "rect": pygame.Rect(400, 320, 200, 50)},
+    {"label": "Random", "rect": pygame.Rect(400, 390, 200, 50)},
+]
+
+# apply menu options through what the user selects
+while mode is None:
+    screen.fill((10, 10, 30))
+    for btn in buttons:
+        pygame.draw.rect(screen, (60, 60, 120), btn["rect"])
+        t = font.render(btn["label"], True, (255, 255, 255))
+        screen.blit(t, (btn["rect"].centerx - t.get_width() // 2,
+                        btn["rect"].centery - t.get_height() // 2))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for btn in buttons:
+                if btn["rect"].collidepoint(event.pos):
+                    mode = btn["label"].lower()  # "front", "back", or "random"
+    pygame.display.update()
+
+
+# main game
 clock = pygame.time.Clock()
 while run:
 
-    screen.blit(background_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
     screen.blit(astroid_img, (0, y))
+    text = font.render(f'Score: {score.points}')
 
     y += 50 * delta_time
 
