@@ -24,7 +24,7 @@ clock = pygame.time.Clock()
 
 font = pygame.font.Font(None, size = 30)
 
-astroid_img = pygame.image.load("astroid.png").convert_alpha
+astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha
 astroid_img = pygame.transform.scale(astroid_img, astroid_img.get_width * 2, astroid_img.get_height * 2)
 
 class Score:
