@@ -24,8 +24,8 @@ clock = pygame.time.Clock()
 
 font = pygame.font.Font(None, size = 30)
 
-astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha
-astroid_img = pygame.transform.scale(astroid_img, astroid_img.get_width * 2, astroid_img.get_height * 2)
+astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha()
+astroid_img = pygame.transform.scale(astroid_img, astroid_img.get_width() * 2, astroid_img.get_height() * 2)
 
 class Score:
     def __init__(self):
@@ -73,8 +73,9 @@ while mode is None:
 clock = pygame.time.Clock()
 while run:
 
+    screen.fill((255, 182, 193)) # light pink rgb
     screen.blit(astroid_img, (0, y))
-    text = font.render(f'Score: {score.points}')
+    text = font.render(f'Score: {score.points}', True, (255, 255, 255)) # White Score
 
     y += 50 * delta_time
 
@@ -82,7 +83,6 @@ while run:
         if event.type == pygame.QUIT:
             run = False
     
-    screen.fill((255, 255, 255))
     pygame.display.update()
     pygame.display.flip()
 
