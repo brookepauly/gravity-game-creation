@@ -25,8 +25,13 @@ clock  = pygame.time.Clock()
 font       = pygame.font.SysFont("hiragino sans gb", 30)
 small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac for Japanese font
 
-astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha() #update -- and randomize
-astroid_img = pygame.transform.scale(astroid_img, (120, 180))
+asteroid_imgs = [
+    pygame.transform.scale(pygame.image.load("/path/to/asteroid1.png").convert_alpha(), (80, 80)),
+    pygame.transform.scale(pygame.image.load("/path/to/asteroid2.png").convert_alpha(), (80, 80)),
+    pygame.transform.scale(pygame.image.load("/path/to/asteroid3.png").convert_alpha(), (80, 80)),
+]
+icon_img = pygame.image.load("/path/to/icon.png").convert_alpha()
+icon_img = pygame.transform.scale(icon_img, (25, 25))
 
 class Score:
     def __init__(self):
@@ -107,6 +112,7 @@ def spawn():
         "y":      -50.0,
         "speed":  BASE_SPEED + SPEED_INCREMENT * (level - 1),
         "red":    red,
+        "img":    random.choice(asteroid_imgs), 
     })
 
 # ── Game loop ─────────────────────────────────────────────────────────────────
@@ -160,28 +166,27 @@ while run:
                 else:
                     retry.append({"shown": ast["shown"], "answer": ast["answer"]})
                 asteroids.remove(ast)
-
-        #if not deck and not retry and not asteroids:
-        #    state = ""
+        if not deck and not retry and not asteroids:
+            random.shuffle(cards)
+            deck = cards.copy()
 
     # ── Draw ──────────────────────────────────────────────────────────────────
 
     screen.fill((255, 182, 193))
 
     for ast in asteroids:
-        img_rect = astroid_img.get_rect(center = (int(ast["x"]), int(ast["y"])))
-        screen.blit(astroid_img, img_rect)
+        img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
+        screen.blit(ast["img"], img_rect)
         t = small_font.render(ast["shown"], True, (0, 0, 0))
         screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2 + 28))
 
     pygame.draw.rect(screen, (30, 30, 60), (0, 640, SCREEN_WIDTH, 60))
     screen.blit(font.render(f"Answer: {input_text}|", True, (255, 255, 255)), (20, 655)) # input text 
-    screen.blit(font.render(f"Score: {score.points}  Level: {level}", True, (255, 255, 255)), (10, 10)) # score rendering
+    screen.blit(icon_img, (10, 10))
+    screen.blit(font.render(f"Score: {score.points}  Level: {level}", True, (255, 255, 255)), (40, 10))
 
     if state == "dead":
         screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
-    if state == "win":
-        screen.blit(font.render(f"YOU WIN!  Score: {score.points}", True, (80, 220, 120)), (400, 380)) # Shouldn't have win state
 
     pygame.display.update()
 
