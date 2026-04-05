@@ -19,18 +19,20 @@ SPEED_INCREMENT         = 20
 MAX_ASTEROIDS_ON_SCREEN = 3
 SCREEN_WIDTH  = 1100
 SCREEN_HEIGHT = 700
-os.environ['SDL_VIDEO_CENTERED'] = '1'
+os.environ['SDL_VIDEO_CENTERED'] = '1' # centers window on screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
 font       = pygame.font.SysFont("hiragino sans gb", 30)
 small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac for Japanese font
+bg_img = pygame.image.load("gravity-game-creation\Images\ppulbatu_background.jpg").convert()
+bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 asteroid_imgs = [
-    pygame.transform.scale(pygame.image.load("/path/to/asteroid1.png").convert_alpha(), (80, 80)),
-    pygame.transform.scale(pygame.image.load("/path/to/asteroid2.png").convert_alpha(), (80, 80)),
-    pygame.transform.scale(pygame.image.load("/path/to/asteroid3.png").convert_alpha(), (80, 80)),
+    pygame.transform.scale(pygame.image.load("gravity-game-creation\Images\txt_stars_1.jpg").convert_alpha(), (80, 80)),
+    pygame.transform.scale(pygame.image.load("gravity-game-creation\Images\txt_stars_2.jpg").convert_alpha(), (80, 80)),
+    pygame.transform.scale(pygame.image.load("gravity-game-creation\Images\txt_stars_3.jpg").convert_alpha(), (80, 80)),
 ]
-icon_img = pygame.image.load("/path/to/icon.png").convert_alpha()
+icon_img = pygame.image.load("gravity-game-creation\Images\txt_logo_v1.jpg").convert_alpha()
 icon_img = pygame.transform.scale(icon_img, (25, 25))
 
 class Score:
@@ -172,8 +174,8 @@ while run:
 
     # ── Draw ──────────────────────────────────────────────────────────────────
 
-    screen.fill((255, 182, 193))
-
+    screen.blit(bg_img, (0, 0))
+    
     for ast in asteroids:
         img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
         screen.blit(ast["img"], img_rect)
