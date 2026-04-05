@@ -25,7 +25,7 @@ clock  = pygame.time.Clock()
 font       = pygame.font.SysFont("hiragino sans gb", 30)
 small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac for Japanese font
 
-astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha()
+astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha() #update -- and randomize
 astroid_img = pygame.transform.scale(astroid_img, (120, 180))
 
 class Score:
