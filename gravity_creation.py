@@ -20,7 +20,7 @@ SCREEN_HEIGHT           = 800
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
 font   = pygame.font.Font(None, 30)
-small_font = pygame.font.Font(None, 18)
+small_font = pygame.font.SysFont("hiragino sans gb", 22)  # common on Mac
 
 astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha()
 astroid_img = pygame.transform.scale(astroid_img, (160, 200))
@@ -63,12 +63,12 @@ while mode is None:
 cards = []
 for _, row in vocab.iterrows():
     if mode == "front":
-        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
+        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[3])})
     elif mode == "back":
         cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
     elif mode == "random":
         if random.random() < 0.5:
-            cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
+            cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[3])})
         else:
             cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
 
