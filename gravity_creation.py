@@ -23,7 +23,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
 font       = pygame.font.SysFont("hiragino sans gb", 30)
-small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac
+small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac for Japanese font
 
 astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha()
 astroid_img = pygame.transform.scale(astroid_img, (120, 180))
@@ -72,7 +72,7 @@ for _, row in vocab.iterrows():
         cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
     elif mode == "romaji":
         cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[2])})  # show english, type romaji
-    elif mode == "random":
+    elif mode == "random": # random between japanese and english (no romaji)
         if random.random() < 0.5:
             cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
         else:
@@ -100,7 +100,7 @@ def spawn():
     else:
         card = deck.pop(0)
         red  = False
-    asteroids.append({
+    asteroids.append({ # asteroid logic
         "shown":  card["shown"],
         "answer": card["answer"],
         "x":      random.randint(100, 900),
@@ -111,7 +111,7 @@ def spawn():
 
 # ── Game loop ─────────────────────────────────────────────────────────────────
 pygame.key.start_text_input()
-pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 60))  # tells IME where to show the conversion popup
+pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 60))  # helps support Japanese typing
 
 run = True
 while run:
@@ -161,15 +161,15 @@ while run:
                     retry.append({"shown": ast["shown"], "answer": ast["answer"]})
                 asteroids.remove(ast)
 
-        if not deck and not retry and not asteroids:
-            state = "win"
+        #if not deck and not retry and not asteroids:
+        #    state = ""
 
     # ── Draw ──────────────────────────────────────────────────────────────────
 
     screen.fill((255, 182, 193))
 
     for ast in asteroids:
-        img_rect = astroid_img.get_rect(center=(int(ast["x"]), int(ast["y"])))
+        img_rect = astroid_img.get_rect(center = (int(ast["x"]), int(ast["y"])))
         screen.blit(astroid_img, img_rect)
         t = small_font.render(ast["shown"], True, (0, 0, 0))
         screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2 + 28))
@@ -181,7 +181,7 @@ while run:
     if state == "dead":
         screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
     if state == "win":
-        screen.blit(font.render(f"YOU WIN!  Score: {score.points}", True, (80, 220, 120)), (400, 380))
+        screen.blit(font.render(f"YOU WIN!  Score: {score.points}", True, (80, 220, 120)), (400, 380)) # Shouldn't have win state
 
     pygame.display.update()
 
