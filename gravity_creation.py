@@ -8,22 +8,25 @@ load_dotenv()
 file_url = os.getenv('FILE_URL')
 vocab = pd.read_csv(file_url)
 
+pygame.display.set_caption("Gravity")
+os.environ['SDL_VIDEO_WINDOW_POS'] = '100,100'  # positions window on screen
+
 pygame.init()
 
 TERMS_PER_LEVEL         = 7
-BASE_SPEED              = 60
+BASE_SPEED              = 30
 SPEED_INCREMENT         = 20
 MAX_ASTEROIDS_ON_SCREEN = 3
-SCREEN_WIDTH            = 1000
-SCREEN_HEIGHT           = 800
-
+SCREEN_WIDTH  = 1100
+SCREEN_HEIGHT = 700
+os.environ['SDL_VIDEO_CENTERED'] = '1'
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
-font   = pygame.font.Font(None, 30)
-small_font = pygame.font.SysFont("hiragino sans gb", 22)  # common on Mac
+font       = pygame.font.SysFont("hiragino sans gb", 30)
+small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac
 
 astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha()
-astroid_img = pygame.transform.scale(astroid_img, (160, 200))
+astroid_img = pygame.transform.scale(astroid_img, (120, 180))
 
 class Score:
     def __init__(self):
@@ -37,9 +40,10 @@ score = Score()
 
 mode    = None
 buttons = [
-    {"label": "Front",  "rect": pygame.Rect(400, 250, 200, 50)},
-    {"label": "Back",   "rect": pygame.Rect(400, 320, 200, 50)},
-    {"label": "Random", "rect": pygame.Rect(400, 390, 200, 50)},
+    {"label": "Front",  "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 75, 200, 50)},
+    {"label": "Back",   "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2,      200, 50)},
+    {"label": "Romaji", "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 36,  200, 50)},
+    {"label": "Random", "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 75, 200, 50)},
 ]
 
 while mode is None:
@@ -63,12 +67,14 @@ while mode is None:
 cards = []
 for _, row in vocab.iterrows():
     if mode == "front":
-        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[3])})
+        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
     elif mode == "back":
         cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
+    elif mode == "romaji":
+        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[2])})  # show english, type romaji
     elif mode == "random":
         if random.random() < 0.5:
-            cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[3])})
+            cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
         else:
             cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
 
@@ -104,6 +110,8 @@ def spawn():
     })
 
 # ── Game loop ─────────────────────────────────────────────────────────────────
+pygame.key.start_text_input()
+pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 60))  # tells IME where to show the conversion popup
 
 run = True
 while run:
@@ -112,6 +120,8 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if event.type == pygame.TEXTINPUT and state == "playing": 
+            input_text += event.text
         if event.type == pygame.KEYDOWN and state == "playing":
             if event.key == pygame.K_RETURN:
                 guess = input_text.strip().lower()
@@ -135,8 +145,6 @@ while run:
                             asteroids.remove(target)
             elif event.key == pygame.K_BACKSPACE:
                 input_text = input_text[:-1]
-            elif event.unicode.isprintable():
-                input_text += event.unicode
 
     if state == "playing":
         spawn_timer += delta_time
@@ -164,11 +172,11 @@ while run:
         img_rect = astroid_img.get_rect(center=(int(ast["x"]), int(ast["y"])))
         screen.blit(astroid_img, img_rect)
         t = small_font.render(ast["shown"], True, (0, 0, 0))
-        screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2 + 30))
+        screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2 + 28))
 
-    pygame.draw.rect(screen, (30, 30, 60), (0, 740, SCREEN_WIDTH, 60))
-    screen.blit(font.render(f"Answer: {input_text}|", True, (255, 255, 255)), (20, 755))
-    screen.blit(font.render(f"Score: {score.points}  Level: {level}", True, (255, 255, 255)), (10, 10))
+    pygame.draw.rect(screen, (30, 30, 60), (0, 640, SCREEN_WIDTH, 60))
+    screen.blit(font.render(f"Answer: {input_text}|", True, (255, 255, 255)), (20, 655)) # input text 
+    screen.blit(font.render(f"Score: {score.points}  Level: {level}", True, (255, 255, 255)), (10, 10)) # score rendering
 
     if state == "dead":
         screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
