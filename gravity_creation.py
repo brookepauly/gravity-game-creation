@@ -1,31 +1,29 @@
-import pygame 
+import pygame
 import pandas as pd
 from dotenv import load_dotenv
 import os
+import random
 
-load_dotenv()  # Load variables from .env file
+load_dotenv()
 file_url = os.getenv('FILE_URL')
-
 vocab = pd.read_csv(file_url)
 
 pygame.init()
 
-# Initialize variables
-TERMS_PER_LEVEL = 7          # asteroids to clear before levelling up
-BASE_SPEED = 60              # pixels per second on level 1
-SPEED_INCREMENT = 20         # extra px/s per level
-MAX_ASTEROIDS_ON_SCREEN = 3  # simultaneous falling asteroids
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 800
-clock = pygame.time.Clock()
+TERMS_PER_LEVEL         = 7
+BASE_SPEED              = 60
+SPEED_INCREMENT         = 20
+MAX_ASTEROIDS_ON_SCREEN = 3
+SCREEN_WIDTH            = 1000
+SCREEN_HEIGHT           = 800
 
-# user selects front, back, or random side of cards to be shown on asteroid
-
-
-font = pygame.font.Font(None, size = 30)
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+clock  = pygame.time.Clock()
+font   = pygame.font.Font(None, 30)
+small_font = pygame.font.Font(None, 18)
 
 astroid_img = pygame.image.load("/Users/brookepauly/Downloads/gravity-creation/Images/asteroid.png").convert_alpha()
-astroid_img = pygame.transform.scale(astroid_img, astroid_img.get_width() * 2, astroid_img.get_height() * 2)
+astroid_img = pygame.transform.scale(astroid_img, (160, 200))
 
 class Score:
     def __init__(self):
@@ -35,23 +33,15 @@ class Score:
 
 score = Score()
 
-# create meteor class
+# ── Menu ──────────────────────────────────────────────────────────────────────
 
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
-run = True
-y = 0
-delta_time = .1
-
-# create menu options
-mode = None
+mode    = None
 buttons = [
     {"label": "Front",  "rect": pygame.Rect(400, 250, 200, 50)},
     {"label": "Back",   "rect": pygame.Rect(400, 320, 200, 50)},
     {"label": "Random", "rect": pygame.Rect(400, 390, 200, 50)},
 ]
 
-# apply menu options through what the user selects
 while mode is None:
     screen.fill((10, 10, 30))
     for btn in buttons:
@@ -65,29 +55,126 @@ while mode is None:
         if event.type == pygame.MOUSEBUTTONDOWN:
             for btn in buttons:
                 if btn["rect"].collidepoint(event.pos):
-                    mode = btn["label"].lower()  # "front", "back", or "random"
+                    mode = btn["label"].lower()
     pygame.display.update()
 
+# ── Build card deck based on mode ─────────────────────────────────────────────
 
-# main game
-clock = pygame.time.Clock()
+cards = []
+for _, row in vocab.iterrows():
+    if mode == "front":
+        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
+    elif mode == "back":
+        cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
+    elif mode == "random":
+        if random.random() < 0.5:
+            cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
+        else:
+            cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
+
+random.shuffle(cards)
+
+# ── Game state ────────────────────────────────────────────────────────────────
+
+deck        = cards.copy()
+retry       = []
+asteroids   = []
+input_text  = ""
+level       = 1
+cleared     = 0
+spawn_timer = 0
+state       = "playing"
+
+def spawn():
+    if len(asteroids) >= MAX_ASTEROIDS_ON_SCREEN or (not deck and not retry):
+        return
+    if retry and (not deck or random.random() < 0.4):
+        card = retry.pop(0)
+        red  = True
+    else:
+        card = deck.pop(0)
+        red  = False
+    asteroids.append({
+        "shown":  card["shown"],
+        "answer": card["answer"],
+        "x":      random.randint(100, 900),
+        "y":      -50.0,
+        "speed":  BASE_SPEED + SPEED_INCREMENT * (level - 1),
+        "red":    red,
+    })
+
+# ── Game loop ─────────────────────────────────────────────────────────────────
+
+run = True
 while run:
-
-    screen.fill((255, 182, 193)) # light pink rgb
-    screen.blit(astroid_img, (0, y))
-    text = font.render(f'Score: {score.points}', True, (255, 255, 255)) # White Score
-
-    y += 50 * delta_time
+    delta_time = clock.tick(60) / 1000
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-    
-    pygame.display.update()
-    pygame.display.flip()
+        if event.type == pygame.KEYDOWN and state == "playing":
+            if event.key == pygame.K_RETURN:
+                guess = input_text.strip().lower()
+                input_text = ""
+                if guess and asteroids:
+                    target = max(asteroids, key=lambda a: a["y"])
+                    if guess == target["answer"].strip().lower():
+                        score.points  += 10 * level
+                        score.correct += 1
+                        asteroids.remove(target)
+                        cleared += 1
+                        if cleared >= TERMS_PER_LEVEL:
+                            level  += 1
+                            cleared = 0
+                    else:
+                        score.incorrect += 1
+                        if target["red"]:
+                            state = "dead"
+                        else:
+                            retry.append({"shown": target["shown"], "answer": target["answer"]})
+                            asteroids.remove(target)
+            elif event.key == pygame.K_BACKSPACE:
+                input_text = input_text[:-1]
+            elif event.unicode.isprintable():
+                input_text += event.unicode
 
-    delta_time = clock.tick(60) / 1000 #fps
-    delta_time = max(0.001, min(0.1, delta_time))
+    if state == "playing":
+        spawn_timer += delta_time
+        if spawn_timer >= 2.0:
+            spawn_timer = 0
+            spawn()
+
+        for ast in asteroids[:]:
+            ast["y"] += ast["speed"] * delta_time
+            if ast["y"] > SCREEN_HEIGHT - 80:
+                if ast["red"]:
+                    state = "dead"
+                else:
+                    retry.append({"shown": ast["shown"], "answer": ast["answer"]})
+                asteroids.remove(ast)
+
+        if not deck and not retry and not asteroids:
+            state = "win"
+
+    # ── Draw ──────────────────────────────────────────────────────────────────
+
+    screen.fill((255, 182, 193))
+
+    for ast in asteroids:
+        img_rect = astroid_img.get_rect(center=(int(ast["x"]), int(ast["y"])))
+        screen.blit(astroid_img, img_rect)
+        t = small_font.render(ast["shown"], True, (0, 0, 0))
+        screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2 + 30))
+
+    pygame.draw.rect(screen, (30, 30, 60), (0, 740, SCREEN_WIDTH, 60))
+    screen.blit(font.render(f"Answer: {input_text}|", True, (255, 255, 255)), (20, 755))
+    screen.blit(font.render(f"Score: {score.points}  Level: {level}", True, (255, 255, 255)), (10, 10))
+
+    if state == "dead":
+        screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
+    if state == "win":
+        screen.blit(font.render(f"YOU WIN!  Score: {score.points}", True, (80, 220, 120)), (400, 380))
+
+    pygame.display.update()
 
 pygame.quit()
-
