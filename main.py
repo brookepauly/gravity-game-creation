@@ -2,12 +2,11 @@ import pygame
 import urllib.request
 import csv
 import io
-
 import os
 import random
 import asyncio
 
-SHEET_NAME = "Active Study" # or Vocab Repo
+SHEET_NAME = "Active_Study" # or Vocab_Repo
 base_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShES0s-zu-auumpN03xYynPNi58fcb3fmPoX0Kx0S39Y-1Owgoi8JaGvT9iYBI7NnW0V58hOapNzqQ/pub?output=csv"
 url = f"{base_url}&sheet={SHEET_NAME}"
 response = urllib.request.urlopen(url)
