@@ -8,7 +8,7 @@ import random
 import asyncio
 
 load_dotenv()
-url = os.getenv("FILE_URL")  # same .env, same link
+url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShES0s-zu-auumpN03xYynPNi58fcb3fmPoX0Kx0S39Y-1Owgoi8JaGvT9iYBI7NnW0V58hOapNzqQ/pub?output=csv"
 response = urllib.request.urlopen(url)
 content  = response.read().decode("utf-8")
 reader   = csv.reader(io.StringIO(content))
@@ -38,9 +38,9 @@ SCREEN_HEIGHT = 1000
 os.environ['SDL_VIDEO_CENTERED'] = '1' # centers window on screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
-font       = pygame.font.SysFont("hiragino sans gb", 18)
-small_font = pygame.font.SysFont("hiragino sans gb", 20)  # common on Mac for Japanese font
-input_font  = pygame.font.SysFont("hiragino sans gb", 18)
+font       = pygame.font.Font(os.path.join(BASE_DIR, "NotoSansJP-Regular.ttf"), 18)
+small_font = pygame.font.Font(os.path.join(BASE_DIR, "NotoSansJP-Regular.ttf"), 20)  # common on Mac for Japanese font
+input_font  = pygame.font.Font(os.path.join(BASE_DIR, "NotoSansJP-Regular.ttf"), 18)
 
 # images
 bg_img = pygame.image.load(os.path.join(BASE_DIR, "Images/ppulbatu_background.jpg")).convert()
@@ -212,7 +212,7 @@ async def main_loop():
 
         pygame.draw.rect(screen, (30, 30, 60), (0, SCREEN_HEIGHT - 30, SCREEN_WIDTH, 100)) # for input bar color
         screen.blit(input_font.render(f"Answer: {input_text}|", True, (255, 255, 255)), # for text input bar font
-            (20, SCREEN_HEIGHT - 25))
+            (20, SCREEN_HEIGHT - 30))
         screen.blit(icon_img, (10, 10))
         score_text = font.render(f"Score: {score.points}", True, (255, 255, 255))
         screen.blit(score_text, (SCREEN_WIDTH - score_text.get_width() - 40,
