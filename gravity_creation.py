@@ -5,6 +5,7 @@ import io
 from dotenv import load_dotenv
 import os
 import random
+import asyncio
 
 load_dotenv()
 url = os.getenv("FILE_URL")  # same .env, same link
@@ -136,55 +137,58 @@ pygame.key.start_text_input()
 pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 60))  # helps support Japanese typing
 
 run = True
-while run:
-    delta_time = clock.tick(60) / 1000
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        if event.type == pygame.TEXTINPUT and state == "playing": 
-            input_text += event.text
-        if event.type == pygame.KEYDOWN and state == "playing":
-            if event.key == pygame.K_RETURN:
-                guess = input_text.strip().lower()
-                input_text = ""
-                if guess and asteroids:
-                    target = max(asteroids, key=lambda a: a["y"])
-                    if guess == target["answer"].strip().lower():
-                        score.points  += 10 * level
-                        score.correct += 1
-                        asteroids.remove(target)
-                        cleared += 1
-                        if cleared >= TERMS_PER_LEVEL:
-                            level  += 1
-                            cleared = 0
-                    else:
-                        score.incorrect += 1
-                        if target["red"]:
-                            state = "dead"
-                        else:
-                            retry.append({"shown": target["shown"], "answer": target["answer"]})
+async def main_loop():
+    while run:
+        delta_time = clock.tick(60) / 1000
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.TEXTINPUT and state == "playing": 
+                input_text += event.text
+            if event.type == pygame.KEYDOWN and state == "playing":
+                if event.key == pygame.K_RETURN:
+                    guess = input_text.strip().lower()
+                    input_text = ""
+                    if guess and asteroids:
+                        target = max(asteroids, key=lambda a: a["y"])
+                        if guess == target["answer"].strip().lower():
+                            score.points  += 10 * level
+                            score.correct += 1
                             asteroids.remove(target)
-            elif event.key == pygame.K_BACKSPACE:
-                input_text = input_text[:-1]
+                            cleared += 1
+                            if cleared >= TERMS_PER_LEVEL:
+                                level  += 1
+                                cleared = 0
+                        else:
+                            score.incorrect += 1
+                            if target["red"]:
+                                state = "dead"
+                            else:
+                                retry.append({"shown": target["shown"], "answer": target["answer"]})
+                                asteroids.remove(target)
+                elif event.key == pygame.K_BACKSPACE:
+                    input_text = input_text[:-1]
 
-    if state == "playing":
-        spawn_timer += delta_time
-        if spawn_timer >= 2.0:
-            spawn_timer = 0
-            spawn()
+        if state == "playing":
+            spawn_timer += delta_time
+            if spawn_timer >= 2.0:
+                spawn_timer = 0
+                spawn()
 
-        for ast in asteroids[:]:
-            ast["y"] += ast["speed"] * delta_time
-            if ast["y"] > SCREEN_HEIGHT - 80:
-                if ast["red"]:
-                    state = "dead"
-                else:
-                    retry.append({"shown": ast["shown"], "answer": ast["answer"]})
-                asteroids.remove(ast)
-        if not deck and not retry and not asteroids:
-            random.shuffle(cards)
-            deck = cards.copy()
+            for ast in asteroids[:]:
+                ast["y"] += ast["speed"] * delta_time
+                if ast["y"] > SCREEN_HEIGHT - 80:
+                    if ast["red"]:
+                        state = "dead"
+                    else:
+                        retry.append({"shown": ast["shown"], "answer": ast["answer"]})
+                    asteroids.remove(ast)
+            if not deck and not retry and not asteroids:
+                random.shuffle(cards)
+                deck = cards.copy()
+    asyncio.run(main_loop())
 
     # ── Draw ──────────────────────────────────────────────────────────────────
 
