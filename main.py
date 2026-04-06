@@ -16,11 +16,11 @@ next(reader)  # skip header row
 
 vocab = []
 for row in reader:
-    if len(row) >= 3:
+    if len(row) >= 4:
         vocab.append({
             "english": row[0],
             "japanese": row[1],
-            "romaji":  row[2],
+            "romaji":  row[3],
         })
 
 pygame.display.set_caption("Gravity")
@@ -28,28 +28,37 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = '100,100'  # positions window on screen
 
 pygame.init()
 
+BASE_DIR = os.path.dirname(__file__)
 TERMS_PER_LEVEL         = 7
 BASE_SPEED              = 30
 SPEED_INCREMENT         = 20
 MAX_ASTEROIDS_ON_SCREEN = 3
-SCREEN_WIDTH  = 1100
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH  = 736
+SCREEN_HEIGHT = 1000
 os.environ['SDL_VIDEO_CENTERED'] = '1' # centers window on screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
-font       = pygame.font.SysFont("hiragino sans gb", 30)
-small_font = pygame.font.SysFont("hiragino sans gb", 12)  # common on Mac for Japanese font
-bg_img = pygame.image.load("gravity-game-creation\Images\ppulbatu_background.jpg").convert()
+font       = pygame.font.SysFont("hiragino sans gb", 18)
+small_font = pygame.font.SysFont("hiragino sans gb", 20)  # common on Mac for Japanese font
+input_font  = pygame.font.SysFont("hiragino sans gb", 18)
+
+# images
+bg_img = pygame.image.load(os.path.join(BASE_DIR, "Images/ppulbatu_background.jpg")).convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 asteroid_imgs = [
-    pygame.transform.scale(pygame.image.load("gravity-game-creation\Images\txt_stars_1.jpg").convert_alpha(), (80, 80)),
-    pygame.transform.scale(pygame.image.load("gravity-game-creation\Images\txt_stars_2.jpg").convert_alpha(), (80, 80)),
-    pygame.transform.scale(pygame.image.load("gravity-game-creation\Images\txt_stars_3.jpg").convert_alpha(), (80, 80)),
+    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_1.jpg")).convert_alpha(), (200, 200)),
+    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_2.jpg")).convert_alpha(), (200, 200)),
+    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_3.jpg")).convert_alpha(), (200, 200)),
 ]
-icon_img = pygame.image.load("gravity-game-creation\Images\txt_logo_v1.jpg").convert_alpha()
-icon_img = pygame.transform.scale(icon_img, (25, 25))
 
+#asteroid_img = pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/star_asteroid.jpeg")).convert_alpha(), (80, 80))
+
+icon_img = pygame.image.load(os.path.join(BASE_DIR, "Images/txt_logo_v3.png")).convert_alpha()
+icon_img = pygame.transform.scale(icon_img, (180, 90))
+
+
+# defining the score
 class Score:
     def __init__(self):
         self.points    = 0
@@ -125,27 +134,29 @@ def spawn():
     asteroids.append({ # asteroid logic
         "shown":  card["shown"],
         "answer": card["answer"],
-        "x":      random.randint(100, 900),
+        "x":      random.randint(100, SCREEN_WIDTH - 100),
         "y":      -50.0,
         "speed":  BASE_SPEED + SPEED_INCREMENT * (level - 1),
         "red":    red,
-        "img":    random.choice(asteroid_imgs), 
+        "img":    pygame.transform.rotate(random.choice(asteroid_imgs), random.randint(0, 360)), #random.choice(asteroid_imgs)
     })
 
 # ── Game loop ─────────────────────────────────────────────────────────────────
-pygame.key.start_text_input()
-pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 60))  # helps support Japanese typing
+pygame.key.start_text_input() # helps support Japanese typing
+pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 40))  # helps support Japanese typing
 
 run = True
 
 async def main_loop():
+    global run, state, input_text, level, cleared, spawn_timer, deck  # need globals since they're modified
+
     while run:
         delta_time = clock.tick(60) / 1000
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.TEXTINPUT and state == "playing": 
+            if event.type == pygame.TEXTINPUT and state == "playing":
                 input_text += event.text
             if event.type == pygame.KEYDOWN and state == "playing":
                 if event.key == pygame.K_RETURN:
@@ -185,29 +196,33 @@ async def main_loop():
                     else:
                         retry.append({"shown": ast["shown"], "answer": ast["answer"]})
                     asteroids.remove(ast)
+
             if not deck and not retry and not asteroids:
                 random.shuffle(cards)
                 deck = cards.copy()
-    asyncio.run(main_loop())
 
-    # ── Draw ──────────────────────────────────────────────────────────────────
+        # ── Draw ──────────────────────────────────────────────────────────
+        screen.blit(bg_img, (0, 0)) # background image add
 
-    screen.blit(bg_img, (0, 0))
+        for ast in asteroids:
+            img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
+            screen.blit(ast["img"], img_rect)
+            t = small_font.render(ast["shown"], True, (0, 0, 0))
+            screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2))
 
-    for ast in asteroids:
-        img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
-        screen.blit(ast["img"], img_rect)
-        t = small_font.render(ast["shown"], True, (0, 0, 0))
-        screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2 + 28))
+        pygame.draw.rect(screen, (30, 30, 60), (0, SCREEN_HEIGHT - 30, SCREEN_WIDTH, 100)) # for input bar color
+        screen.blit(input_font.render(f"Answer: {input_text}|", True, (255, 255, 255)), # for text input bar font
+            (20, SCREEN_HEIGHT - 25))
+        screen.blit(icon_img, (10, 10))
+        score_text = font.render(f"Score: {score.points}", True, (255, 255, 255))
+        screen.blit(score_text, (SCREEN_WIDTH - score_text.get_width() - 40,
+                         40))
 
-    pygame.draw.rect(screen, (30, 30, 60), (0, 640, SCREEN_WIDTH, 60))
-    screen.blit(font.render(f"Answer: {input_text}|", True, (255, 255, 255)), (20, 655)) # input text 
-    screen.blit(icon_img, (10, 10))
-    screen.blit(font.render(f"Score: {score.points}  Level: {level}", True, (255, 255, 255)), (40, 10))
+        if state == "dead":
+            screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
 
-    if state == "dead":
-        screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
+        pygame.display.update()
+        await asyncio.sleep(0)  # this line must be at the end of the loop for pygbag
 
-    pygame.display.update()
-
+asyncio.run(main_loop())
 pygame.quit()
