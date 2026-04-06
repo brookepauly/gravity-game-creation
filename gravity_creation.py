@@ -1,12 +1,26 @@
 import pygame
-import pandas as pd
+import urllib.request
+import csv
+import io
 from dotenv import load_dotenv
 import os
 import random
 
 load_dotenv()
-file_url = os.getenv('FILE_URL')
-vocab = pd.read_csv(file_url)
+url = os.getenv("FILE_URL")  # same .env, same link
+response = urllib.request.urlopen(url)
+content  = response.read().decode("utf-8")
+reader   = csv.reader(io.StringIO(content))
+next(reader)  # skip header row
+
+vocab = []
+for row in reader:
+    if len(row) >= 3:
+        vocab.append({
+            "english": row[0],
+            "japanese": row[1],
+            "romaji":  row[2],
+        })
 
 pygame.display.set_caption("Gravity")
 os.environ['SDL_VIDEO_WINDOW_POS'] = '100,100'  # positions window on screen
@@ -72,18 +86,18 @@ while mode is None:
 # ── Build card deck based on mode ─────────────────────────────────────────────
 
 cards = []
-for _, row in vocab.iterrows():
+for card in vocab:
     if mode == "front":
-        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
+        cards.append({"shown": card["english"], "answer": card["japanese"]})
     elif mode == "back":
-        cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
+        cards.append({"shown": card["japanese"], "answer": card["english"]})
     elif mode == "romaji":
-        cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[2])})  # show english, type romaji
-    elif mode == "random": # random between japanese and english (no romaji)
+        cards.append({"shown": card["english"], "answer": card["romaji"]})
+    elif mode == "random":
         if random.random() < 0.5:
-            cards.append({"shown": str(row.iloc[0]), "answer": str(row.iloc[1])})
+            cards.append({"shown": card["english"], "answer": card["japanese"]})
         else:
-            cards.append({"shown": str(row.iloc[1]), "answer": str(row.iloc[0])})
+            cards.append({"shown": card["japanese"], "answer": card["english"]})
 
 random.shuffle(cards)
 
@@ -175,7 +189,7 @@ while run:
     # ── Draw ──────────────────────────────────────────────────────────────────
 
     screen.blit(bg_img, (0, 0))
-    
+
     for ast in asteroids:
         img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
         screen.blit(ast["img"], img_rect)
