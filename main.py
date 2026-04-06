@@ -2,13 +2,14 @@ import pygame
 import urllib.request
 import csv
 import io
-from dotenv import load_dotenv
+
 import os
 import random
 import asyncio
 
-load_dotenv()
-url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShES0s-zu-auumpN03xYynPNi58fcb3fmPoX0Kx0S39Y-1Owgoi8JaGvT9iYBI7NnW0V58hOapNzqQ/pub?output=csv"
+SHEET_NAME = "Active Study" # or Vocab Repo
+base_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShES0s-zu-auumpN03xYynPNi58fcb3fmPoX0Kx0S39Y-1Owgoi8JaGvT9iYBI7NnW0V58hOapNzqQ/pub?output=csv"
+url = f"{base_url}&sheet={SHEET_NAME}"
 response = urllib.request.urlopen(url)
 content  = response.read().decode("utf-8")
 reader   = csv.reader(io.StringIO(content))
