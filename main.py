@@ -37,18 +37,20 @@ SCREEN_HEIGHT = 1000
 os.environ['SDL_VIDEO_CENTERED'] = '1' # centers window on screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
-font       = pygame.font.Font(os.path.join(BASE_DIR, "NotoSansJP-Regular.ttf"), 18)
-small_font = pygame.font.Font(os.path.join(BASE_DIR, "NotoSansJP-Regular.ttf"), 20)  # common on Mac for Japanese font
-input_font  = pygame.font.Font(os.path.join(BASE_DIR, "NotoSansJP-Regular.ttf"), 18)
+font       = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 22)
+small_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/HachiMaruPop-Regular.ttf"), 20)  # common on Mac for Japanese font
+input_font  = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 18)
+feedback_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/HachiMaruPop-Regular.ttf"), 16)  # adjust size/style
+end_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/Bytesized-Regular.ttf"), 80)
 
 # images
 bg_img = pygame.image.load(os.path.join(BASE_DIR, "Images/ppulbatu_background.jpg")).convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 asteroid_imgs = [
-    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_1.jpg")).convert_alpha(), (200, 200)),
-    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_2.jpg")).convert_alpha(), (200, 200)),
-    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_3.jpg")).convert_alpha(), (200, 200)),
+    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_1.jpg")).convert_alpha(), (250, 250)),
+    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_2.jpg")).convert_alpha(), (250, 250)),
+    pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/txt_stars_3.jpg")).convert_alpha(), (250, 250)),
 ]
 
 #asteroid_img = pygame.transform.scale(pygame.image.load(os.path.join(BASE_DIR, "Images/star_asteroid.jpeg")).convert_alpha(), (80, 80))
@@ -120,6 +122,8 @@ level       = 1
 cleared     = 0
 spawn_timer = 0
 state       = "playing"
+feedback    = ""   
+feedback_timer = 0.0   
 
 def spawn():
     if len(asteroids) >= MAX_ASTEROIDS_ON_SCREEN or (not deck and not retry):
@@ -137,7 +141,7 @@ def spawn():
         "y":      -50.0,
         "speed":  BASE_SPEED + SPEED_INCREMENT * (level - 1),
         "red":    red,
-        "img":    pygame.transform.rotate(random.choice(asteroid_imgs), random.randint(0, 360)), #random.choice(asteroid_imgs)
+        "img":    pygame.transform.rotate(random.choice(asteroid_imgs), random.randint(0, 260)),
     })
 
 # ── Game loop ─────────────────────────────────────────────────────────────────
@@ -170,6 +174,8 @@ while run:
                             cleared = 0
                     else:
                         score.incorrect += 1
+                        feedback       = f"{target['shown']} {target['answer']}"
+                        feedback_timer = 1.0
                         if target["red"]:
                             state = "dead"
                         else:
@@ -180,6 +186,10 @@ while run:
 
     if state == "playing":
         spawn_timer += delta_time
+        if feedback_timer > 0:
+            feedback_timer -= delta_time
+            if feedback_timer <= 0:
+                feedback = ""
         if spawn_timer >= 2.0:
             spawn_timer = 0
             spawn()
@@ -213,9 +223,13 @@ while run:
     score_text = font.render(f"Score: {score.points}", True, (255, 255, 255))
     screen.blit(score_text, (SCREEN_WIDTH - score_text.get_width() - 40,
                         40))
+    if feedback:
+        fb_surf = feedback_font.render(feedback, True, (179,235,242)) # light yellow: 255,255,197, light pink: 255, 192, 203, pastel blue: 179,235,242, other blue: 196,216,226
+        screen.blit(fb_surf, (30, 40 + icon_img.get_height() - 9))
 
     if state == "dead":
-        screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
+        dead_surf = end_font.render("GAME OVER", True, (179,235,242))
+        screen.blit(dead_surf, (SCREEN_WIDTH // 2 - dead_surf.get_width() // 2, SCREEN_HEIGHT // 2))
 
     pygame.display.update()
 
