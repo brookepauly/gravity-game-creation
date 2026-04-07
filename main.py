@@ -1,10 +1,9 @@
 import pygame
 import urllib.request
 import csv
-import io
 import os
+import io
 import random
-import asyncio
 
 SHEET_NAME = "Active_Study" # or Vocab_Repo
 base_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShES0s-zu-auumpN03xYynPNi58fcb3fmPoX0Kx0S39Y-1Owgoi8JaGvT9iYBI7NnW0V58hOapNzqQ/pub?output=csv"
@@ -147,82 +146,76 @@ pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 40))  # helps s
 
 run = True
 
-async def main_loop():
-    global run, state, input_text, level, cleared, spawn_timer, deck  # need globals since they're modified
+while run:
+    delta_time = clock.tick(60) / 1000
 
-    while run:
-        delta_time = clock.tick(60) / 1000
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-            if event.type == pygame.TEXTINPUT and state == "playing":
-                input_text += event.text
-            if event.type == pygame.KEYDOWN and state == "playing":
-                if event.key == pygame.K_RETURN:
-                    guess = input_text.strip().lower()
-                    input_text = ""
-                    if guess and asteroids:
-                        target = max(asteroids, key=lambda a: a["y"])
-                        if guess == target["answer"].strip().lower():
-                            score.points  += 10 * level
-                            score.correct += 1
-                            asteroids.remove(target)
-                            cleared += 1
-                            if cleared >= TERMS_PER_LEVEL:
-                                level  += 1
-                                cleared = 0
-                        else:
-                            score.incorrect += 1
-                            if target["red"]:
-                                state = "dead"
-                            else:
-                                retry.append({"shown": target["shown"], "answer": target["answer"]})
-                                asteroids.remove(target)
-                elif event.key == pygame.K_BACKSPACE:
-                    input_text = input_text[:-1]
-
-        if state == "playing":
-            spawn_timer += delta_time
-            if spawn_timer >= 2.0:
-                spawn_timer = 0
-                spawn()
-
-            for ast in asteroids[:]:
-                ast["y"] += ast["speed"] * delta_time
-                if ast["y"] > SCREEN_HEIGHT - 80:
-                    if ast["red"]:
-                        state = "dead"
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if event.type == pygame.TEXTINPUT and state == "playing":
+            input_text += event.text
+        if event.type == pygame.KEYDOWN and state == "playing":
+            if event.key == pygame.K_RETURN:
+                guess = input_text.strip().lower()
+                input_text = ""
+                if guess and asteroids:
+                    target = max(asteroids, key=lambda a: a["y"])
+                    if guess == target["answer"].strip().lower():
+                        score.points  += 10 * level
+                        score.correct += 1
+                        asteroids.remove(target)
+                        cleared += 1
+                        if cleared >= TERMS_PER_LEVEL:
+                            level  += 1
+                            cleared = 0
                     else:
-                        retry.append({"shown": ast["shown"], "answer": ast["answer"]})
-                    asteroids.remove(ast)
+                        score.incorrect += 1
+                        if target["red"]:
+                            state = "dead"
+                        else:
+                            retry.append({"shown": target["shown"], "answer": target["answer"]})
+                            asteroids.remove(target)
+            elif event.key == pygame.K_BACKSPACE:
+                input_text = input_text[:-1]
 
-            if not deck and not retry and not asteroids:
-                random.shuffle(cards)
-                deck = cards.copy()
+    if state == "playing":
+        spawn_timer += delta_time
+        if spawn_timer >= 2.0:
+            spawn_timer = 0
+            spawn()
 
-        # ── Draw ──────────────────────────────────────────────────────────
-        screen.blit(bg_img, (0, 0)) # background image add
+        for ast in asteroids[:]:
+            ast["y"] += ast["speed"] * delta_time
+            if ast["y"] > SCREEN_HEIGHT - 80:
+                if ast["red"]:
+                    state = "dead"
+                else:
+                    retry.append({"shown": ast["shown"], "answer": ast["answer"]})
+                asteroids.remove(ast)
 
-        for ast in asteroids:
-            img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
-            screen.blit(ast["img"], img_rect)
-            t = small_font.render(ast["shown"], True, (0, 0, 0))
-            screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2))
+        if not deck and not retry and not asteroids:
+            random.shuffle(cards)
+            deck = cards.copy()
 
-        pygame.draw.rect(screen, (30, 30, 60), (0, SCREEN_HEIGHT - 30, SCREEN_WIDTH, 100)) # for input bar color
-        screen.blit(input_font.render(f"Answer: {input_text}|", True, (255, 255, 255)), # for text input bar font
-            (20, SCREEN_HEIGHT - 30))
-        screen.blit(icon_img, (10, 10))
-        score_text = font.render(f"Score: {score.points}", True, (255, 255, 255))
-        screen.blit(score_text, (SCREEN_WIDTH - score_text.get_width() - 40,
-                         40))
+    # ── Draw ──────────────────────────────────────────────────────────
+    screen.blit(bg_img, (0, 0)) # background image add
 
-        if state == "dead":
-            screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
+    for ast in asteroids:
+        img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
+        screen.blit(ast["img"], img_rect)
+        t = small_font.render(ast["shown"], True, (0, 0, 0))
+        screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2))
 
-        pygame.display.update()
-        await asyncio.sleep(0)  # this line must be at the end of the loop for pygbag
+    pygame.draw.rect(screen, (30, 30, 60), (0, SCREEN_HEIGHT - 30, SCREEN_WIDTH, 100)) # for input bar color
+    screen.blit(input_font.render(f"Answer: {input_text}|", True, (255, 255, 255)), # for text input bar font
+        (20, SCREEN_HEIGHT - 30))
+    screen.blit(icon_img, (10, 10))
+    score_text = font.render(f"Score: {score.points}", True, (255, 255, 255))
+    screen.blit(score_text, (SCREEN_WIDTH - score_text.get_width() - 40,
+                        40))
 
-asyncio.run(main_loop())
-pygame.quit()
+    if state == "dead":
+        screen.blit(font.render("GAME OVER", True, (220, 80, 80)), (450, 380))
+
+    pygame.display.update()
+
