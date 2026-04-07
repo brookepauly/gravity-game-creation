@@ -148,6 +148,7 @@ def spawn():
 pygame.key.start_text_input() # helps support Japanese typing
 pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 40))  # helps support Japanese typing
 
+death_timer = None
 run = True
 
 while run:
@@ -178,6 +179,7 @@ while run:
                         feedback_timer = 1.0
                         if target["red"]:
                             state = "dead"
+                            death_timer = pygame.time.get_ticks()  # start the clock
                         else:
                             retry.append({"shown": target["shown"], "answer": target["answer"]})
                             asteroids.remove(target)
@@ -199,6 +201,7 @@ while run:
             if ast["y"] > SCREEN_HEIGHT - 80:
                 if ast["red"]:
                     state = "dead"
+                    death_timer = pygame.time.get_ticks()  # start the clock
                 else:
                     retry.append({"shown": ast["shown"], "answer": ast["answer"]})
                 asteroids.remove(ast)
@@ -206,6 +209,11 @@ while run:
         if not deck and not retry and not asteroids:
             random.shuffle(cards)
             deck = cards.copy()
+
+        # --- DEAD STATE TIMER ---
+    if state == "dead" and death_timer is not None:
+        if pygame.time.get_ticks() - death_timer >= 2000:  # 2 seconds
+            run = False   # exit main loop
 
     # ── Draw ──────────────────────────────────────────────────────────
     screen.blit(bg_img, (0, 0)) # background image add
