@@ -38,9 +38,9 @@ os.environ['SDL_VIDEO_CENTERED'] = '1' # centers window on screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
 font       = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 22)
-small_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/HachiMaruPop-Regular.ttf"), 20)  # common on Mac for Japanese font
+small_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 20)  # common on Mac for Japanese font
 input_font  = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 18)
-feedback_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/HachiMaruPop-Regular.ttf"), 16)  # adjust size/style
+feedback_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 16)  # adjust size/style
 end_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/Bytesized-Regular.ttf"), 80)
 
 # images
@@ -219,9 +219,10 @@ while run:
     screen.blit(bg_img, (0, 0)) # background image add
 
     for ast in asteroids:
+        color = (224, 33, 138) if ast['red'] else (0, 0, 0)
         img_rect = ast["img"].get_rect(center=(int(ast["x"]), int(ast["y"])))
         screen.blit(ast["img"], img_rect)
-        t = small_font.render(ast["shown"], True, (0, 0, 0))
+        t = small_font.render(ast["shown"], True, color)
         screen.blit(t, (int(ast["x"]) - t.get_width() // 2, int(ast["y"]) - t.get_height() // 2))
 
     pygame.draw.rect(screen, (30, 30, 60), (0, SCREEN_HEIGHT - 30, SCREEN_WIDTH, 100)) # for input bar color
