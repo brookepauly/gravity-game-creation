@@ -19,7 +19,7 @@ for row in reader:
         vocab.append({
             "english": row[0],
             "japanese": row[1],
-            "romaji":  row[3],
+            "hiragana":  row[2],
         })
 
 pygame.display.set_caption("Gravity")
@@ -74,7 +74,7 @@ mode    = None
 buttons = [
     {"label": "Front",  "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 115, 200, 50)},
     {"label": "Back",   "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 - 55,  200, 50)},
-    {"label": "Romaji", "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 5,   200, 50)},
+    {"label": "Hiragana", "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 5,   200, 50)},
     {"label": "Random", "rect": pygame.Rect(SCREEN_WIDTH//2 - 100, SCREEN_HEIGHT//2 + 65,  200, 50)},
 ]
 
@@ -102,13 +102,13 @@ for card in vocab:
         cards.append({"shown": card["english"], "answer": card["japanese"]})
     elif mode == "back":
         cards.append({"shown": card["japanese"], "answer": card["english"]})
-    elif mode == "romaji":
-        cards.append({"shown": card["english"], "answer": card["romaji"]})
+    elif mode == "hiragana":
+        cards.append({"shown": card["english"], "answer": card["hiragana"]})
     elif mode == "random":
         if random.random() < 0.5:
-            cards.append({"shown": card["english"], "answer": card["japanese"]})
+            cards.append({"shown": card["english"], "answer": card["hiragana"]})
         else:
-            cards.append({"shown": card["japanese"], "answer": card["english"]})
+            cards.append({"shown": card["hiragana"], "answer": card["english"]})
 
 random.shuffle(cards)
 
@@ -146,10 +146,12 @@ def spawn():
 
 # ── Game loop ─────────────────────────────────────────────────────────────────
 pygame.key.start_text_input() # helps support Japanese typing
-pygame.key.set_text_input_rect(pygame.Rect(0, 740, SCREEN_WIDTH, 40))  # helps support Japanese typing
+input_box = pygame.Rect(0, SCREEN_HEIGHT - 30, SCREEN_WIDTH, 100)
+pygame.key.set_text_input_rect((input_box))  # 0, 740, SCREEN_WIDTH, 40
 
 death_timer = None
 run = True
+active = False
 
 while run:
     delta_time = clock.tick(60) / 1000
@@ -157,9 +159,14 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if event.type == pygame.TEXTINPUT and state == "playing":
+        if event.type == pygame.TEXTINPUT and state == "playing" and active:
             input_text += event.text
-        if event.type == pygame.KEYDOWN and state == "playing":
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if input_box.collidepoint(event.pos):
+                active = True   # Clicked inside → focus
+            else:
+                active = False  # Clicked outside → unfocus
+        if event.type == pygame.KEYDOWN and state == "playing" and active:
             if event.key == pygame.K_RETURN:
                 guess = input_text.strip().lower()
                 input_text = ""
