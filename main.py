@@ -5,8 +5,8 @@ import os
 import io
 import random
 
-SHEET_NAME = "Active_Study" # or Vocab_Repo
-base_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShES0s-zu-auumpN03xYynPNi58fcb3fmPoX0Kx0S39Y-1Owgoi8JaGvT9iYBI7NnW0V58hOapNzqQ/pub?output=csv"
+SHEET_NAME = "Vocab_Repo" # or Vocab_Repo
+base_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?output=csv"
 url = f"{base_url}&sheet={SHEET_NAME}"
 response = urllib.request.urlopen(url)
 content  = response.read().decode("utf-8")
