@@ -5,6 +5,7 @@ import csv
 import os
 import io
 import random
+# Command + Control + D to hide dock on Mac
 
 # GRABBING VOCAB FROM GOOGLE SHEET
 SHEET_NAME = "Vocab_Repo" # or Vocab_Repo
