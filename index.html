@@ -373,11 +373,15 @@
     });
   });
 
-  inputEl.addEventListener("keydown", e => {
+  inputEl.addEventListener("compositionend", () => {
+  isComposing = false;
+  inputEl.focus();  // <-- refocus after IME confirms
+});
+
+  inputEl.addEventListener("keyup", e => {
     if (gameState !== "playing") return;
     if (e.key === "Enter") {
       const guess = inputEl.value.trim().toLowerCase();
-      inputEl.value = "";
       if (!guess || !asteroids.length) return;
 
       // target the lowest asteroid (furthest down screen)
@@ -389,7 +393,9 @@
         asteroids.splice(asteroids.indexOf(target), 1);
         cleared++;
         if (cleared >= TERMS_PER_LEVEL) { level++; cleared = 0; }
+        inputEl.value = "";
       } else {
+        inputEl.value = "";
         score.incorrect++;
         feedback      = `${target.shown}  ${target.answer}`;
         feedbackTimer = 1.0;
