@@ -38,8 +38,12 @@
 (async () => {
 
   // ── CONSTANTS ──────────────────────────────────────────────────────────────
-  const SHEET_NAME      = "Vocab_Repo";
-  const SHEET_URL       = `https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?output=csv&sheet=${SHEET_NAME}`;
+  const SHEET_NAME      = "Active_Study"; // change to "Vocab_Repo" to switch sheets
+const SHEET_URLS = {
+  Active_Study: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?gid=923942808&single=true&output=csv",
+  Vocab_Repo:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?gid=0&single=true&output=csv",
+};
+const SHEET_URL = SHEET_URLS[SHEET_NAME];
   const TERMS_PER_LEVEL = 7;
   const BASE_SPEED      = 30;
   const SPEED_INC       = 20;
