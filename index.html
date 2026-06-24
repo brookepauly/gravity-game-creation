@@ -38,10 +38,10 @@
 (async () => {
 
   // ── CONSTANTS ──────────────────────────────────────────────────────────────
-  const SHEET_NAME      = "Active_Study"; // change to "Vocab_Repo" to switch sheets
+  const SHEET_NAME      = "Vocab_Repo"; // change to "Vocab_Repo" to switch sheets
 const SHEET_URLS = {
   Active_Study: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?gid=923942808&single=true&output=csv",
-  Vocab_Repo:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?gid=0&single=true&output=csv",
+  Vocab_Repo:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBYNEU5xj3BnWzR8fJQe8qHkAnxsBeptyJgbPFBP4LdDOdaZCkWCrTi0kDTAav42ksbAlp7HvwAVKc/pub?output=csv",
 };
 const SHEET_URL = SHEET_URLS[SHEET_NAME];
   const TERMS_PER_LEVEL = 7;
@@ -133,6 +133,12 @@ const SHEET_URL = SHEET_URLS[SHEET_NAME];
       if (mode === "front")   result.push({ shown: v.english,  answer: v.japanese });
       if (mode === "back")    result.push({ shown: v.japanese, answer: v.english });
       if (mode === "hiragana") result.push({ shown: v.english, answer: v.hiragana });
+      if (mode === "reading") {
+      result.push({
+        shown: v.japanese,
+        answer: v.hiragana
+      });
+    }
       if (mode === "random") {
         if (Math.random() < 0.5) result.push({ shown: v.english,  answer: v.hiragana });
         else                      result.push({ shown: v.hiragana, answer: v.english });
@@ -186,6 +192,7 @@ const SHEET_URL = SHEET_URLS[SHEET_NAME];
     { label: "Front",    mode: "front" },
     { label: "Back",     mode: "back" },
     { label: "Hiragana", mode: "hiragana" },
+    { label: "Reading",  mode: "reading" }, // NEW
     { label: "Random",   mode: "random" },
   ];
   function btnRect(i) {
