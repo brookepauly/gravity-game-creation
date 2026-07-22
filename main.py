@@ -41,6 +41,7 @@ SCREEN_HEIGHT = 1000
 os.environ['SDL_VIDEO_CENTERED'] = '1' # centers window on screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock  = pygame.time.Clock()
+
 # common font on Mac for Japanese
 font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 22) # first option screen and score
 small_font = pygame.font.Font(os.path.join(BASE_DIR, "Fonts/NotoSansJP-Regular.ttf"), 20) # on cards
