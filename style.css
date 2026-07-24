@@ -9,10 +9,13 @@ body {
   font-family: 'Noto Sans JP', sans-serif;
 }
 
-#wrapper {
-  position: relative;
-  width: min(1600px, 97vw);
-  aspect-ratio: 16 / 9;
+#gc {
+  width: 100%;
+  max-width: 2560px;
+  height: auto;
+  aspect-ratio: 2560 / 1280;
+  display: block;
+  margin: 0 auto;
 }
 
 canvas {

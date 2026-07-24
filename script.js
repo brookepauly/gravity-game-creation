@@ -12,7 +12,7 @@
   const BASE_SPEED      = 30;
   const SPEED_INC       = 20;
   const MAX_ASTEROIDS   = 3;
-  const W = 1600, H = 900;
+  const W = 2560, H = 1080;
 
   const canvas   = document.getElementById("gc");
   const ctx      = canvas.getContext("2d");
