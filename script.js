@@ -372,7 +372,7 @@
     } else {
       inputEl.value = "";
       score.incorrect++;
-      feedback = `${target.shown}  ${target.answer} (${target.hiragana})`;
+      feedback = `${target.shown}  ${target.answer} ${target.hiragana}`;
       feedbackTimer = 1.0;
       if (target.red) {
         gameState  = "dead";
