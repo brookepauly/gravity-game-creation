@@ -19,7 +19,6 @@
   const inputEl  = document.getElementById("answer-input");
   const inputBar = document.getElementById("input-bar");
 
-  // Loads an image and resolves once it's ready (or rejects on error)
   function loadImg(src) {
     return new Promise((res, rej) => {
       const img = new Image();
@@ -29,7 +28,6 @@
     });
   }
 
-  // Load background, logo, and asteroid textures up front so the game loop never stalls on them
   let bgImg, iconImg, asteroidImgs;
   try {
     [bgImg, iconImg, ...asteroidImgs] = await Promise.all([
@@ -43,8 +41,6 @@
     console.warn("Some images failed to load, using fallbacks.", e);
   }
 
-  // Google Fonts are pulled in via the <link> tag in index.html.
-  // The "GAME OVER" font is a local file, so load it separately.
   let byteFont = null;
   try {
     const ff = new FontFace("Bytesized", "url(Fonts/Bytesized-Regular.ttf)");
@@ -54,7 +50,6 @@
     console.warn("Bytesized font not found, using monospace fallback.");
   }
 
-  // Pull vocab rows from the published Google Sheet CSV
   let vocab = [];
   try {
     const result = await new Promise((res, rej) => {
@@ -80,7 +75,6 @@
     return;
   }
 
-  // Fisher-Yates shuffle
   function shuffle(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -90,22 +84,31 @@
     return a;
   }
 
-  // Turns the raw vocab list into a shuffled deck of { shown, answer } cards for the chosen mode
+  // Turns the raw vocab list into a shuffled deck of { shown, answer, hiragana } cards for the chosen mode.
+  // `shown` stays exactly as it was before per mode (hiragana only visually embedded in "back" mode's
+  // shown string, same as originally). `hiragana` is now always carried as its own field regardless of
+  // mode, so feedback can show it every time.
   function buildCards(mode) {
     const result = [];
     for (const v of vocab) {
-      if (mode === "front")  result.push({ shown: v.english,  answer: v.japanese });
-      if (mode === "back")   result.push({ shown: `${v.japanese} (${v.hiragana})`, answer: v.english });
+      if (mode === "front") {
+        result.push({ shown: v.english, answer: v.japanese, hiragana: v.hiragana });
+      }
+      if (mode === "back") {
+        result.push({ shown: `${v.japanese} (${v.hiragana})`, answer: v.english, hiragana: v.hiragana });
+      }
       if (mode === "random") {
-        if (Math.random() < 0.5) result.push({ shown: v.english,  answer: v.hiragana });
-        else                     result.push({ shown: `${v.japanese} (${v.hiragana})`, answer: v.english });
+        if (Math.random() < 0.5) {
+          result.push({ shown: v.english, answer: v.hiragana, hiragana: v.hiragana });
+        } else {
+          result.push({ shown: `${v.japanese} (${v.hiragana})`, answer: v.english, hiragana: v.hiragana });
+        }
       }
     }
     return shuffle(result);
   }
 
-  // Game state
-  let gameState  = "menu"; // "menu" | "playing" | "dead"
+  let gameState  = "menu";
   let mode       = null;
   let deck       = [];
   let retry      = [];
@@ -120,8 +123,6 @@
   let lastTs     = null;
   let mousePos   = { x: 0, y: 0 };
 
-  // Pulls the next card from retry (occasionally, as a red/dangerous asteroid) or from the deck,
-  // and drops it in from the top of the screen
   function spawnAsteroid() {
     if (asteroids.length >= MAX_ASTEROIDS) return;
     if (!deck.length && !retry.length) return;
@@ -137,6 +138,7 @@
     asteroids.push({
       shown:    card.shown,
       answer:   card.answer,
+      hiragana: card.hiragana,
       x:        100 + Math.random() * (W - 200),
       y:        -50,
       speed:    BASE_SPEED + SPEED_INC * (level - 1),
@@ -147,7 +149,6 @@
     });
   }
 
-  // Menu mode-select buttons
   const MENU_BUTTONS = [
     { label: "Front",  mode: "front" },
     { label: "Back",   mode: "back" },
@@ -221,7 +222,6 @@
     ctx.textAlign = "right";
     ctx.fillText(`Score: ${score.points}`, W - 40, 50);
 
-    // shows the correct answer briefly after a miss
     if (feedback) {
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "16px 'Noto Sans JP'";
@@ -277,7 +277,7 @@
             gameState  = "dead";
             deathTimer = performance.now();
           } else {
-            retry.push({ shown: ast.shown, answer: ast.answer });
+            retry.push({ shown: ast.shown, answer: ast.answer, hiragana: ast.hiragana });
           }
           asteroids.splice(asteroids.indexOf(ast), 1);
         }
@@ -291,7 +291,6 @@
     } else if (gameState === "dead") {
       drawGame();
       if (deathTimer && performance.now() - deathTimer >= 2000) {
-        // reset everything back to a clean menu state
         gameState  = "menu";
         mode       = null;
         deathTimer = null;
@@ -311,7 +310,6 @@
     requestAnimationFrame(gameLoop);
   }
 
-  // Converts a mouse event's page coords into logical canvas coords (canvas is scaled by CSS)
   function canvasCoords(e) {
     const rect   = canvas.getBoundingClientRect();
     const scaleX = W / rect.width;
@@ -342,7 +340,6 @@
     });
   });
 
-  // refocus the input once an IME composition (e.g. Japanese input) finishes
   inputEl.addEventListener("compositionend", () => {
     inputEl.focus();
   });
@@ -352,10 +349,8 @@
     if (e.key !== "Enter" && e.key !== "Escape") return;
     if (!asteroids.length) return;
 
-    // always answer the asteroid closest to the bottom
     const target = asteroids.reduce((a, b) => (a.y > b.y ? a : b));
 
-    // Escape always counts as a miss, skipping the guess check entirely
     const guess = e.key === "Escape" ? null : inputEl.value.trim().toLowerCase();
     if (e.key === "Enter" && !guess) return;
 
@@ -372,19 +367,19 @@
     } else {
       inputEl.value = "";
       score.incorrect++;
+      // Feedback always includes hiragana now, regardless of mode.
       feedback = `${target.shown}  ${target.answer} ${target.hiragana}`;
       feedbackTimer = 1.0;
       if (target.red) {
         gameState  = "dead";
         deathTimer = performance.now();
       } else {
-        retry.push({ shown: target.shown, answer: target.answer });
+        retry.push({ shown: target.shown, answer: target.answer, hiragana: target.hiragana });
         asteroids.splice(asteroids.indexOf(target), 1);
       }
     }
   });
 
-  // keep the answer input focused throughout play
   document.addEventListener("click", () => {
     if (gameState === "playing") inputEl.focus();
   });
