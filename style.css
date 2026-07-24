@@ -18,7 +18,7 @@ body {
 canvas {
   display: block;
   width: 100%;
-  height: calc(100% - 30px); /* leave room for input bar */
+  height: calc(100% - 30px); 
 }
 
 #input-bar {

@@ -95,10 +95,10 @@
     const result = [];
     for (const v of vocab) {
       if (mode === "front")  result.push({ shown: v.english,  answer: v.japanese });
-      if (mode === "back")   result.push({ shown: v.japanese, answer: v.english });
+      if (mode === "back")   result.push({ shown: `${v.japanese} (${v.hiragana})`, answer: v.english });
       if (mode === "random") {
         if (Math.random() < 0.5) result.push({ shown: v.english,  answer: v.hiragana });
-        else                     result.push({ shown: v.hiragana, answer: v.english });
+        else                     result.push({ shown: `${v.japanese} (${v.hiragana})`, answer: v.english });
       }
     }
     return shuffle(result);
@@ -113,7 +113,7 @@
   let level      = 1;
   let cleared    = 0;
   let spawnTimer = 0;
-  let feedback      = "";
+  let feedback   = "";
   let feedbackTimer = 0;
   let score      = { points: 0, correct: 0, incorrect: 0 };
   let deathTimer = null;
@@ -223,7 +223,7 @@
 
     // shows the correct answer briefly after a miss
     if (feedback) {
-      ctx.fillStyle = "#b3ebf2";
+      ctx.fillStyle = "#FFFFFF";
       ctx.font = "16px 'Noto Sans JP'";
       ctx.textAlign = "left";
       ctx.fillText(feedback, 30, 40 + 90 - 9);
